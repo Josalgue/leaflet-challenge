@@ -1,58 +1,58 @@
-// Selectable backgrounds of our map - tile layers:
-// grayscale background.
-var graymap_background = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?" +
+// Import layers as variables
+// grayscale background
+var graymap_bg = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?" +
   "access_token=pk.eyJ1IjoibWFudWVsYW1hY2hhZG8iLCJhIjoiY2ppczQ0NzBtMWNydTNrdDl6Z2JhdzZidSJ9.BFD3qzgAC2kMoEZirGaDjA");
 
-// satellite background.
-var satellitemap_background = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/256/{z}/{x}/{y}?" +
+// satellite background
+var satellitemap_bg = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/256/{z}/{x}/{y}?" +
   "access_token=pk.eyJ1IjoibWFudWVsYW1hY2hhZG8iLCJhIjoiY2ppczQ0NzBtMWNydTNrdDl6Z2JhdzZidSJ9.BFD3qzgAC2kMoEZirGaDjA");
 
-// outdoors background.
-var outdoors_background = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/outdoors-v9/tiles/256/{z}/{x}/{y}?" +
+// outdoors background
+var outdoors_bg = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/outdoors-v9/tiles/256/{z}/{x}/{y}?" +
   "access_token=pk.eyJ1IjoibWFudWVsYW1hY2hhZG8iLCJhIjoiY2ppczQ0NzBtMWNydTNrdDl6Z2JhdzZidSJ9.BFD3qzgAC2kMoEZirGaDjA");
 
-// map object to an array of layers we created.
+// Create array of layers
 var map = L.map("mapid", {
   center: [37.09, -95.71],
   zoom: 5,
-  layers: [graymap_background, satellitemap_background, outdoors_background]
+  layers: [graymap_bg, satellitemap_bg, outdoors_bg]
 });
 
-// adding one 'graymap' tile layer to the map.
-graymap_background.addTo(map);
+// Add base layer to the map.
+satellitemap_bg.addTo(map);
 
-// layers for two different sets of data, earthquakes and tectonicplates.
+// Set noverlays for earthquakes and tectonicplates visualizations
 var tectonicplates = new L.LayerGroup();
 var earthquakes = new L.LayerGroup();
 
-// base layers
+// Stack layers
 var baseMaps = {
-  Satellite: satellitemap_background,
-  Grayscale: graymap_background,
-  Outdoors: outdoors_background
+  Satellite: satellitemap_bg,
+  Outdoors: outdoors_bg,
+  Grayscale: graymap_bg
 };
 
-// overlays 
+// Add overlays
 var overlayMaps = {
   "Tectonic Plates": tectonicplates,
   "Earthquakes": earthquakes
 };
 
-// control which layers are visible.
+// Set visible layers
 L
   .control
   .layers(baseMaps, overlayMaps)
   .addTo(map);
 
-// retrieve earthquake geoJSON data.
+// Fetch earthquake geoJSON data
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson", function(data) {
 
 
-  function styleInfo(feature) {
+  function styleData(feature) {
     return {
       opacity: 1,
       fillOpacity: 1,
-      fillColor: getColor(feature.properties.mag),
+      fillColor: setColor(feature.properties.mag),
       color: "#000000",
       radius: getRadius(feature.properties.mag),
       stroke: true,
@@ -60,8 +60,8 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geo
     };
   }
 
-  // Define the color of the marker based on the magnitude of the earthquake.
-  function getColor(magnitude) {
+  // Define the color of the marker based on the magnitude of the earthquake
+  function setColor(magnitude) {
     switch (true) {
       case magnitude > 5:
         return "#ea2c2c";
@@ -78,7 +78,7 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geo
     }
   }
 
-  // define the radius of the earthquake marker based on its magnitude.
+  // Size radius of the earthquake marker based on its magnitude
 
   function getRadius(magnitude) {
     if (magnitude === 0) {
@@ -88,12 +88,12 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geo
     return magnitude * 3;
   }
 
-  // add GeoJSON layer to the map
+  // Add GeoJSON layer to the map
   L.geoJson(data, {
     pointToLayer: function(feature, latlng) {
       return L.circleMarker(latlng);
     },
-    style: styleInfo,
+    style: styleData,
     onEachFeature: function(feature, layer) {
       layer.bindPopup("Magnitude: " + feature.properties.mag + "<br>Location: " + feature.properties.place);
     }
@@ -134,7 +134,7 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geo
 
   legend.addTo(map);
 
-  // retrive Tectonic Plate geoJSON data.
+  // Fetch tectonicplates geoJSON data with d3
   d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json",
     function(platedata) {
  
@@ -144,7 +144,7 @@ d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geo
       })
       .addTo(tectonicplates);
 
-      // add the tectonicplates layer to the map.
+      // Add the tectonicplates layer
       tectonicplates.addTo(map);
     });
 });
